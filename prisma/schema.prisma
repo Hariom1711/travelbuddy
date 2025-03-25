@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  username      String?   @unique
+  password      String?
+  bio           String?   @db.Text
+  location      String?
+
+  preferences   UserPreferences?
+  trips         Trip[]
+  stories       Story[]
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserPreferences {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @unique
+  travelStyle String[] @default([])
+  budget     String?
+  accessibility String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Trip {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  startDate   DateTime
+  endDate     DateTime
+  budget      Float?
+  currency    String?  @default("USD")
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  
+  destinations TripDestination[]
+  activities   Activity[]
+  packingItems PackingItem[]
+  stories      Story[]
+  
+  privacy     String   @default("private") // public, friends, private
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TripDestination {
+  id          String  @id @default(cuid())
+  trip        Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  tripId      String
+  name        String
+  country     String?
+  arrivalDate DateTime
+  departureDate DateTime
+  lat         Float?
+  lng         Float?
+  
+  activities   Activity[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Activity {
+  id          String  @id @default(cuid())
+  title       String
+  description String? @db.Text
+  startTime   DateTime?
+  endTime     DateTime?
+  cost        Float?
+  notes       String? @db.Text
+  bookingReference String?
+  
+  trip        Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  tripId      String
+  
+  destination TripDestination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  destinationId String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PackingItem {
+  id          String  @id @default(cuid())
+  item        String
+  category    String?
+  packed      Boolean @default(false)
+  
+  trip        Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  tripId      String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Story {
+  id          String  @id @default(cuid())
+  title       String
+  content     String  @db.Text
+  images      StoryImage[]
+  tags        String[] @default([])
+  
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  
+  trip        Trip?   @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  tripId      String?
+  
+  privacy     String  @default("public") // public, friends, private
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StoryImage {
+  id          String  @id @default(cuid())
+  url         String
+  caption     String?
+  locationName String?
+  lat         Float?
+  lng         Float?
+  
+  story       Story   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  storyId     String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

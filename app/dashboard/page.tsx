@@ -1,10 +1,14 @@
+
+
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Plus, Map, Compass, BookOpen } from 'lucide-react';
+import { ArrowRight, Plus, Map, Compass, BookOpen, Search } from 'lucide-react';
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -49,6 +53,28 @@ export default async function DashboardPage() {
       year: 'numeric',
     });
   };
+
+  // Destinations with more details
+  const destinations = [
+    { 
+      name: 'Japan', 
+      description: 'A blend of ancient traditions and cutting-edge technology',
+      imageUrl: '/destinations/japan.jpg',
+      attractions: ['Tokyo', 'Kyoto', 'Mount Fuji']
+    },
+    { 
+      name: 'Italy', 
+      description: 'Rich history, art, and culinary delights',
+      imageUrl: '/destinations/italy.jpg',
+      attractions: ['Rome', 'Venice', 'Florence']
+    },
+    { 
+      name: 'Bali', 
+      description: 'Tropical paradise with unique culture and landscapes',
+      imageUrl: '/destinations/bali.jpg',
+      attractions: ['Ubud', 'Seminyak', 'Uluwatu']
+    },
+  ];
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -103,7 +129,7 @@ export default async function DashboardPage() {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-1 order-2 lg:order-1">
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Your Upcoming Trips</CardTitle>
@@ -147,31 +173,55 @@ export default async function DashboardPage() {
           </Card>
         </div>
         
-        <div>
+        <div className="lg:col-span-2 order-1 lg:order-2">
           <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Popular Destinations</CardTitle>
-              <CardDescription>Explore trending places to visit</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Popular Destinations</CardTitle>
+                <CardDescription>Explore trending places to visit</CardDescription>
+              </div>
+              <div className="relative flex-grow max-w-md ml-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input 
+                  type="text" 
+                  placeholder="Search destinations..." 
+                  className="pl-10 w-full"
+                />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { name: 'Japan', imageUrl: '/destinations/japan.jpg' },
-                  { name: 'Italy', imageUrl: '/destinations/italy.jpg' },
-                  { name: 'Bali', imageUrl: '/destinations/bali.jpg' },
-                ].map((destination) => (
-                  <div key={destination.name} className="group relative rounded-lg overflow-hidden h-24">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/70 to-blue-600/30 z-10"></div>
-                    <div className="z-20 relative h-full flex items-center p-4">
-                      <h3 className="font-medium text-white">{destination.name}</h3>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {destinations.map((destination) => (
+                <div 
+                  key={destination.name} 
+                  className="group relative rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Image 
+                    src={destination.imageUrl} 
+                    alt={destination.name} 
+                    fill
+                    className="absolute inset-0 object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                  <div className="relative p-4 h-full flex flex-col justify-end text-white">
+                    <h3 className="text-xl font-bold mb-2">{destination.name}</h3>
+                    <p className="text-sm mb-2 opacity-80">{destination.description}</p>
+                    <div className="flex space-x-2">
+                      {destination.attractions.map((attraction) => (
+                        <span 
+                          key={attraction} 
+                          className="bg-white/20 px-2 py-1 rounded-full text-xs"
+                        >
+                          {attraction}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </CardContent>
             <CardFooter>
               <Button variant="outline" asChild className="w-full">
-                <Link href="/destinations">Explore Destinations</Link>
+                <Link href="/destinations">Explore More Destinations</Link>
               </Button>
             </CardFooter>
           </Card>
